@@ -1,0 +1,63 @@
+variable "location" {}
+terraform {
+    required_providers {
+    azurerm = {
+        source  = "hashicorp/azurerm"
+        version = "~>3.0"
+    }
+    
+    tls = {
+        source = "hashicorp/tls"
+        version = "~>4.0"
+        }
+    }
+}
+
+provider "azurerm" {
+    skip_provider_registration = "true"
+    features {}
+
+
+    # Not necessary if you have the Azure CLI installed and configured
+    # tenant_id       = "${var.tenant_id}"
+    # subscription_id = "${var.subscription_id}"
+    # client_secret	  = "${var.client_secret}"
+    # client_id		  = "${var.client_id}"
+}
+
+data "azurerm_resource_group" "rg" {
+    name     = "ITUTB"
+}
+
+resource "azurerm_service_plan" "svp" {
+    name                = "svp-ITUTB"
+    resource_group_name = azurerm_resource_group.rg.name
+    location            = azurerm_resource_group.rg.location
+    os_type             = "Linux"
+    sku_name            = "F1"
+}
+
+resource "azurerm_linux_web_app" "app" {
+    name                = "app-ITUTB"
+    resource_group_name = azurerm_resource_group.rg.name
+    location            = azurerm_service_plan.rg.location
+    service_plan_id     = azurerm_service_plan.svp.id
+
+    site_config {
+        always_on = true
+        minimum_tls_version = 1.2
+    }
+}
+
+resource "azurerm_app_service_source_control" "src" {
+    app_id   = azurerm_linux_web_app.app.id
+    repo_url = "https://github.com/03Jesus/nodejs-express-mysql"
+    branch   = "main"
+
+    github_action_configuration {
+        code_configuration {
+            runtime_stack = "node"
+            runtime_version = 20
+        }
+    }
+}

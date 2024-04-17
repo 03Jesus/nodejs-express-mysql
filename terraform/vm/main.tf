@@ -21,11 +21,13 @@ terraform {
 provider "azurerm" {
     skip_provider_registration = "true"
     features {}
-    
-    tenant_id       = "${var.tenant_id}"
-    subscription_id = "${var.subscription_id}"
-    client_secret	  = "${var.client_secret}"
-    client_id		  = "${var.client_id}"
+
+
+    # Not necessary if you have the Azure CLI installed and configured
+    # tenant_id       = "${var.tenant_id}"
+    # subscription_id = "${var.subscription_id}"
+    # client_secret	  = "${var.client_secret}"
+    # client_id		  = "${var.client_id}"
 }
 
 resource "azurerm_resource_group" "rg" {
@@ -76,7 +78,7 @@ resource "azurerm_network_security_group" "nsg" {
 
     security_rule {
         name                       = "allowMysql"
-        priority                   = 103
+        priority                   = 104
         direction                  = "Inbound"
         access                     = "Allow"
         protocol                   = "Tcp"
@@ -150,7 +152,7 @@ resource "azurerm_linux_virtual_machine" "utb_vm" {
         version   = "latest"
     }
 
-    user_data = data.template_file.userdata.rendered
+    user_data = base64encode(data.template_file.userdata.rendered)
 
     computer_name                   = "utbvm"
     admin_username                  = "azureuser"
@@ -164,4 +166,8 @@ resource "azurerm_linux_virtual_machine" "utb_vm" {
 
 output "virtual_machine_ip" {
     value = azurerm_public_ip.public_ip.ip_address
+}
+
+output "virtual_machine_private_ip" {
+    value = azurerm_network_interface.vm_nic.private_ip_address
 }

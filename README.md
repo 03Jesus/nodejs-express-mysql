@@ -35,6 +35,13 @@ En este se podrán encontrar la instrucciones necesarias para crear la máquina 
 ## Paso 4. Crear script de Ansible
 En el archivo [userdata.sh](/terraform/userdata.sh) se puede encontrar el script que tiene un listado de comandos que se ejecutarán en la máquina instanciada para poder instalar ansible y posteriormente MySQL
 
+## Paso 5. Ejecutar terraform
+```
+terraform init
+terraform plan
+terraform apply --auto-approve
+```
+
 ## Project setup
 ```
 npm install
