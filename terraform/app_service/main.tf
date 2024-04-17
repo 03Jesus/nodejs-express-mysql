@@ -40,7 +40,7 @@ resource "azurerm_service_plan" "svp" {
 resource "azurerm_linux_web_app" "app" {
     name                = "app-ITUTB"
     resource_group_name = data.azurerm_resource_group.rg.name
-    location            = data.azurerm_service_plan.rg.location
+    location            = azurerm_service_plan.svp.location
     service_plan_id     = azurerm_service_plan.svp.id
     https_only = true
 
