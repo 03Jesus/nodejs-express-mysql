@@ -1,7 +1,7 @@
 ---
 - name: Install & Secure Mysql 8 on Ubuntu
-  hosts: ubuntu_servers
-  become: yes
+  hosts: localhost
+  connection: local
 
   vars_files:
     - vars.yml
@@ -21,7 +21,6 @@
         - mysql-client
         - python3-mysqldb
         - libmysqlclient-dev
-      become: yes
 
     - name: start and enable mysql service
       service:
