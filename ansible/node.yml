@@ -1,0 +1,28 @@
+---
+- name: Install NodeJS and PM2 on Ubuntu
+  hosts: localhost
+  connection: local
+
+  tasks:
+    - name: Add Node.js repository
+      apt_repository:
+        repo: "deb https://deb.nodesource.com/setup_lts.x {{ ansible_distribution_release }} main"
+        state: present
+        update_cache: yes
+
+    - name: Install Node.js
+        apt:
+          name: nodejs
+          state: present
+          update_cache: yes
+
+    - name: Install PM2
+      npm:
+        name: pm2
+        global: yes
+        state: present
+
+    - name: Start PM2
+      command: pm2 start server.js --name="nodejs-express-mysql"
+      args:
+        chdir: ~/actions-runner/_work/nodejs-express-mysql/nodejs-express-mysql
