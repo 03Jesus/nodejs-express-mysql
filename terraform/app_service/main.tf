@@ -1,4 +1,5 @@
 variable "location" {}
+variable "ssh_key_path" {}
 terraform {
     required_providers {
     azurerm = {
@@ -25,40 +26,124 @@ provider "azurerm" {
     # client_id		  = "${var.client_id}"
 }
 
-data "azurerm_resource_group" "rg" {
-    name     = "ITUTB"
+resource "azurerm_resource_group" "rg" {
+    name     = "ITUTB-NODE"
+    location = "${var.location}"
 }
 
-resource "azurerm_service_plan" "svp" {
-    name                = "svp-ITUTB"
-    resource_group_name = data.azurerm_resource_group.rg.name
-    location            = data.azurerm_resource_group.rg.location
-    os_type             = "Linux"
-    sku_name            = "F1"
-}
+resource "azurerm_network_security_group" "nsg" {
+    name                = "allow_ssh"
+    location            = azurerm_resource_group.rg.location
+    resource_group_name = azurerm_resource_group.rg.name
 
-resource "azurerm_linux_web_app" "app" {
-    name                = "app-ITUTB"
-    resource_group_name = data.azurerm_resource_group.rg.name
-    location            = azurerm_service_plan.svp.location
-    service_plan_id     = azurerm_service_plan.svp.id
-    https_only = true
+    security_rule {
+        name                       = "allowSSH"
+        priority                   = 101
+        direction                  = "Inbound"
+        access                     = "Allow"
+        protocol                   = "Tcp"
+        source_port_range          = "*"
+        destination_port_range     = "22"
+        source_address_prefix      = "*"
+        destination_address_prefix = "*"
+    }
 
-    site_config {
-        always_on = true
-        minimum_tls_version = 1.2
+    security_rule {
+        name                       = "allowPublicWeb"
+        priority                   = 102
+        direction                  = "Inbound"
+        access                     = "Allow"
+        protocol                   = "Tcp"
+        source_port_range          = "*"
+        destination_port_range     = "80"
+        source_address_prefix      = "*"
+        destination_address_prefix = "*"
+    }
+
+    security_rule {
+        name                       = "allowHttps"
+        priority                   = 103
+        direction                  = "Inbound"
+        access                     = "Allow"
+        protocol                   = "Tcp"
+        source_port_range          = "*"
+        destination_port_range     = "443"
+        source_address_prefix      = "*"
+        destination_address_prefix = "*"
     }
 }
 
-resource "azurerm_app_service_source_control" "src" {
-    app_id   = azurerm_linux_web_app.app.id
-    repo_url = "https://github.com/03Jesus/nodejs-express-mysql"
-    branch   = "main"
+resource "azurerm_virtual_network" "utb_network" {
+    name                = "utb_network_node"
+    address_space       = ["10.0.0.0/16"]
+    location            = azurerm_resource_group.rg.location
+    resource_group_name = azurerm_resource_group.rg.name
+}
 
-    github_action_configuration {
-        code_configuration {
-            runtime_stack = "node"
-            runtime_version = 20
-        }
+resource "azurerm_subnet" "utb_subnet" {
+    name                 = "utb_subnet_node"
+    resource_group_name  = azurerm_resource_group.rg.name
+    virtual_network_name = azurerm_virtual_network.utb_network.name
+    address_prefixes     = ["10.0.1.0/24"]
+}
+
+resource "azurerm_public_ip" "public_ip" {
+    name                = "vm_ip_node"
+    location            = azurerm_resource_group.rg.location
+    resource_group_name = azurerm_resource_group.rg.name
+    allocation_method   = "Static"
+}
+
+resource "azurerm_network_interface" "vm_nic" {
+    name                = "vm_nic_node"
+    location            = azurerm_resource_group.rg.location
+    resource_group_name = azurerm_resource_group.rg.name
+
+    ip_configuration {
+        name                          = "ipconfig_nic_node"
+        subnet_id                     = azurerm_subnet.utb_subnet.id
+        private_ip_address_allocation = "Dynamic"
+        public_ip_address_id          = azurerm_public_ip.public_ip.id
+    }
+}
+
+resource "azurerm_network_interface_security_group_association" "nsg_nic_assoc" {
+    network_interface_id      = azurerm_network_interface.vm_nic.id
+    network_security_group_id = azurerm_network_security_group.nsg.id
+}
+
+data "template_file" "userdata" {
+    template = file("${path.module}/userdata.sh")
+}
+
+resource "azurerm_linux_virtual_machine" "utb_vm" {
+    name                  = "node_vm"
+    location              = azurerm_resource_group.rg.location
+    resource_group_name   = azurerm_resource_group.rg.name
+    network_interface_ids = [azurerm_network_interface.vm_nic.id]
+    size                  = "Standard_B1s"
+
+    os_disk {
+        name                 = "myOsDisk"
+        caching              = "ReadWrite"
+        storage_account_type = "Standard_LRS"
+    }
+
+    source_image_reference {
+        publisher = "Canonical"
+        offer     = "0001-com-ubuntu-server-jammy"
+        sku       = "22_04-lts-gen2"
+        version   = "latest"
+    }
+
+    user_data = base64encode(data.template_file.userdata.rendered)
+
+    computer_name                   = "nodevm"
+    admin_username                  = "azureuser"
+    disable_password_authentication = true
+
+    admin_ssh_key {
+        username   = "azureuser"
+        public_key = file("${var.ssh_key_path}")
     }
 }
