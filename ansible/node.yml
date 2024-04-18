@@ -6,7 +6,7 @@
   tasks:
     - name: Add Node.js repository
       apt_repository:
-        repo: "deb https://deb.nodesource.com/setup_lts.x {{ ansible_distribution_release }} main"
+        repo: "deb https://deb.nodesource.com/node_20.x {{ ansible_distribution_release }} main"
         state: present
         update_cache: yes
 
