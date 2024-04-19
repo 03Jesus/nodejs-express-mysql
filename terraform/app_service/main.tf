@@ -1,5 +1,4 @@
 variable "location" {}
-variable "ssh_key_path" {}
 terraform {
     required_providers {
     azurerm = {
