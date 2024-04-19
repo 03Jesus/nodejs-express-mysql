@@ -8,4 +8,4 @@ sudo apt install -y git python3-pip ansible
 pip3 install ansible
 git clone https://github.com/03Jesus/nodejs-express-mysql.git
 cd nodejs-express-mysql/ansible
-ansible-playbook node.yml
+ansible-playbook mysql.yml
