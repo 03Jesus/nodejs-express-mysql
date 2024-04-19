@@ -61,13 +61,7 @@ Este [pipeline](/.github/workflows/node.js.yml) nos permitirá enviar los cambio
 ## Paso 8. Ejecutar terraform
 Cómo paso adicional se decidió crear un [script](/execute.sh) que ejecute inicialmente la creación de la máquina virtual con MySQL y por último el que crea el App Service dentro de Azure.
 
-
-## Paso 8. Ejecutar terraform
-```
-terraform init
-terraform plan
-terraform apply --auto-approve
-```
+Cómo se mencionó anteriormente, a la fecha, Azure está teniendo problemas para crear un service plan lo cual nos impide crear el App Services, por lo que lamentablemente no se pueden adjuntar pruebas de que la aplicación se creó y ejectuó satisfactoriamente. Sin embargo en este repositorio se encuentran los pasos necesarios para el despliegue del proyecto.
 
 ## Project setup
 ```
