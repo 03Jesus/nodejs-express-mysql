@@ -63,6 +63,11 @@ Cómo paso adicional se decidió crear un [script](/execute.sh) que ejecute inic
 
 Cómo se mencionó anteriormente, a la fecha, Azure está teniendo problemas para crear un service plan lo cual nos impide crear el App Services, por lo que lamentablemente no se pueden adjuntar pruebas de que la aplicación se creó y ejectuó satisfactoriamente. Sin embargo en este repositorio se encuentran los pasos necesarios para el despliegue del proyecto.
 
+# Integrantes
+- Jesús David Puello Saavedra - T00062299
+- Didier Jesus Agamez Escobar - T00064562
+- Jesus David Petro Ramos - T00065696
+
 ## Project setup
 ```
 npm install
